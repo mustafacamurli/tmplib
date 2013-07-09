@@ -16,12 +16,12 @@
  *  along with TmpltLib.  If not, see <http://www.gnu.org/licenses/>.
  *
  *  Mustafa CAMURLI - mustafacamurli@gmail.com
- *  Mon June 08, 2013
+ *  Mon July 08, 2013
 /
 
 /**
  * Author: Mustafa CAMURLI
- * Date: Mon June 08, 2013
+ * Date: Mon July 08, 2013
  *
  * +) Template Stack Library
 */
