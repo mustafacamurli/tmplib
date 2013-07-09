@@ -92,6 +92,15 @@
  *
 */
 
+/**
+ * Update Notes
+ * Author: Mustafa CAMURLI
+ * Date: Tue July 08, 20131
+ *
+ * +) white space corrections
+ *
+*/
+
 #ifndef _T_LIST_H_
 #define _T_LIST_H_
 
