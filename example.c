@@ -12,7 +12,6 @@ typedef struct my_type_s my_type_t;
 
 struct my_type_s {
 	char* cp;
-	struct my_type_s* next;
 };
 
 int cmp_my_type(const my_type_t* t1, const my_type_t* t2)
@@ -34,7 +33,6 @@ my_type_t* cpy_my_type(const my_type_t* t)
 		return NULL;
 	}
 	*(r_val->cp) = *(t->cp);
-	r_val->next  = NULL;
 	return r_val;
 }
 
@@ -48,8 +46,8 @@ void print_my_type(const my_type_t* t)
 	/* nothing */;
 }
 
-tlist_header(my_type_t,my,cmp_my_type,cpy_my_type,free_my_type,print_my_type)
-tlist_source(my_type_t,my,cmp_my_type,cpy_my_type,free_my_type,print_my_type)
+tlist_header(my_type_t, my)
+tlist_source(my_type_t, my, cmp_my_type, cpy_my_type, free_my_type, print_my_type, malloc, free)
 
 my_type_t* generate_my_type()
 {
@@ -64,7 +62,6 @@ my_type_t* generate_my_type()
 		return NULL;
 	}
 	*(r_val->cp) = (rand()%26)+'A';
-	r_val->next  = NULL;
 	return r_val;
 }
 
@@ -85,8 +82,8 @@ int main()
 		temp = generate_my_type();
 		if (!temp)
 			continue;
-		if (!add_to_my_list(&list,temp))
-			fprintf(stderr,"element exist or internal error\n");
+		if (add_to_my_list(&list,temp))
+			fprintf(stderr,"internal error\n");
 		else
 			++k;
 		free(temp);

@@ -95,9 +95,23 @@
 /**
  * Update Notes
  * Author: Mustafa CAMURLI
- * Date: Tue July 08, 20131
+ * Date: Tue July 08, 2013
  *
  * +) white space corrections
+ *
+*/
+
+/**
+ * Update Notes
+ * Author: Mustafa CAMURLI
+ * Date: Sat July 27, 2013
+ *
+ * +) new core structure type is introduced
+ * +) no need to user defined next pointer anymore
+ * +) adding the same element into list is allowed
+ * +) add_to_##name##_list function returns an integer instead of pointer
+ * +) unnecessary header declarator macro parameters are removed
+ * +) merge_##name##_lists function behavior is changed
  *
 */
 
@@ -108,7 +122,7 @@
 
 /**
  * @description:
- *  singly-linked list declarator macro
+ *  singly-linked list header declarator macro
  *
  * @parameters
  *  type [in] -> name of type of structure
@@ -118,31 +132,6 @@
  *       if you send MyType, the name of the function adds a element
  *       into the list would be add_MyType_list.
  *
- *  cmp  [in] -> compare function for type which is sent for type parameter
- *       compare function must take two CONST type pointers.
- *       If two struct that are pointed by pointers are equal,
- *       it should return zero, If first parameter is logically
- *       bigger than the second, it should return 1,
- *       returns -1 vice versa. Do NOT try to check if given pointers
- *       are NULL. There is no suitable return for this case.
- *
- *  cpy  [in] -> copy function for type which is send for type parameters
- *       copy function takes CONST type pointer and returns a pointer that
- *       points copy of the data which is pointed by the pointer that
- *       is taken as a parameter. If any error occurs, copy function
- *       should return NULL.
- *
- *  fr   [in] -> free function for deallocate type structure. It should take
- *       a pointer of type and return nothing
- *
- *  prnt [in] -> print function for an element of the list. The function
- *       is used debugging purposes. It should take a CONST pointer of
- *       type and return nothing.
- *
- * @limitations
- *  +) type has to have a next variables that is supposed to
- *     point next node.
- *
  * #######################################################################
  *
  * @Application Programmer Interface
@@ -150,7 +139,7 @@
  *  +) void init_##name##_list(t_##name##_list_t*)
  *
  *
- *  +) const type* add_to_##name##_list(t_##name##_list_t*, const type*)
+ *  +) int add_to_##name##_list(t_##name##_list_t, const type*)
  *
  *  +) size_t size_of_##name##_list(t_##name##_list_t)
  *
@@ -158,27 +147,28 @@
  *
  *  +) const type* get_element_from_##name##_list(t_##name##_list_t, size_t)
  *
- *  +) void free_##name##_list(t_##name##_list_t*)
+ *  +) void free_##name##_list(t_##name##_list_t)
  *
  *  +) const type* get_same_element_from_##name##_list(t_##name##_list_t, const type*)
  *
  *  +) int get_index_of_element_from_##name##_list(t_##name##_list_t, const type*)
  *
- *  +) void print_##name##_list(t_##name##_list_t)
+ *  +) void print_##name##_list(t_##name##_list_t*)
  *
  *  +) t_##name##_list_t merge_##name##_lists(t_##name##_list_t, t_##name##_list_t)
  *
 */
 
-#define tlist_header(type,name,cmp,cpy,fr,prnt)\
+#define tlist_header(type, name)\
     \
     /**
      * @description:
      *  template list custom type
     */\
-    typedef struct t_##name##_list_s t_##name##_list_t;\
+    typedef struct t_##name##_list_s* t_##name##_list_t;\
     struct t_##name##_list_s {\
-        type* head;\
+        type* elem;\
+        struct t_##name##_list_s* next;\
     };\
     \
     \
@@ -204,14 +194,11 @@
      *  te  [in] -> pointer of new element
      *
      * @return
-     *  added element if successful, NULL otherwise.
+     *  0 if it's successful, -1 otherwise.
      *
-     * @warnings
-     *   + new data'll be pointed with a new internal
-     *     pointer. te'll be no longer required for the list.
      *
     */\
-    const type* add_to_##name##_list(t_##name##_list_t* tlp, const type* te);\
+    int add_to_##name##_list(t_##name##_list_t* tlp, const type* te);\
     \
     \
     /**
@@ -263,7 +250,7 @@
      *   remove the given list.
      *
      * @parameters
-     *   tlp [in] -> template list pointer
+     *   tl* [in] -> template list pointer
      *
      * @return
      *   nothing
@@ -326,144 +313,197 @@
      *
      * @return
      *   new list from two lists. Duplicates will be discarded.
+     *   if there is an error during copy merge process, empty list
+     *   will be returned.
     */\
     t_##name##_list_t merge_##name##_lists(t_##name##_list_t tl1, t_##name##_list_t tl2);\
     \
     \
 
-#define tlist_source(type,name,cmp,cpy,fr,prnt)\
+/**
+ * @description:
+ *  singly-linked list source declarator macro
+ *
+ * @parameters
+ *  type   [in] -> name of type of structure
+ *         struct my_def_s or my_def_t is OKAY.
+ *
+ *  name   [in] -> name of new module, should be uniqe
+ *         if you send MyType, the name of the function adds a element
+ *         into the list would be add_MyType_list.
+ *
+ *  cmp    [in] -> compare function for type which is sent for type parameter
+ *         compare function must take two CONST type pointers.
+ *         If two struct that are pointed by pointers are equal,
+ *         it should return zero, If first parameter is logically
+ *         bigger than the second, it should return 1,
+ *         returns -1 vice versa. Do NOT try to check if given pointers
+ *         are NULL. There is no suitable return for this case.
+ *
+ *  cpy    [in] -> copy function for type which is send for type parameters
+ *         copy function takes CONST type pointer and returns a pointer that
+ *         points copy of the data which is pointed by the pointer that
+ *         is taken as a parameter. If any error occurs, copy function
+ *         should return NULL.
+ *
+ *  elemfr [in] -> free function for deallocate type structure. It should take
+ *         a pointer of type and return nothing
+ *
+ *  prnt   [in] -> print function for an element of the list. The function
+ *         is used debugging purposes. It should take a CONST pointer of
+ *         type and return nothing.
+ *
+ * memalc  [in] -> memory allocation function. It allocated memory with
+ *         given size, type of size_t.
+ *
+ * memfr   [in] -> memory free function frees memory that allocated with
+ *         memalc function before.
+ *
+ */
+#define tlist_source(type, name, cmp, cpy, elemfr, prnt, memalc, memfr)\
     \
     void init_##name##_list(t_##name##_list_t* tlp)\
     {\
-        if (tlp) {\
-            tlp->head = NULL;\
-        }\
+        *tlp = NULL;\
     }\
     \
     \
-    const type* add_to_##name##_list(t_##name##_list_t* tlp, const type* te)\
+    int add_to_##name##_list(t_##name##_list_t* tlp, const type* te)\
     {\
-        type* tmp = NULL;\
-        type* prev = NULL;\
-        type* head = NULL;\
-        if ((!te)||(!tlp))\
-            return NULL;\
-        head = tlp->head;\
-        while(head && (cmp(head,te)<0)) {\
-            prev = head;\
-            head = head->next;\
+        t_##name##_list_t node;\
+        t_##name##_list_t tmpl;\
+        t_##name##_list_t tmplp;\
+        \
+        if ((!te) || (!tlp)) {\
+            return (-1);\
         }\
-        /* same element can't be added.*/\
-        if (head && !cmp(head,te))\
-            return NULL;\
-        tmp = cpy(te);\
-        if (!tmp)\
-            return NULL;\
-        /* head of the list */\
-        if (!prev) {\
-            tmp->next = tlp->head;\
-            tlp->head = tmp;\
+        node = (t_##name##_list_t)memalc(sizeof(struct t_##name##_list_s));\
+        if (!node) {\
+            return (-1);\
+        }\
+        node->elem = cpy(te);\
+        if (!(node->elem)) {\
+            memfr(node);\
+            return (-1);\
+        }\
+        node->next = NULL;\
+        /* empty list */\
+        if (!(*tlp)) {\
+            *tlp = node;\
+            return (0);\
+        }\
+        tmplp = NULL;\
+        tmpl = *tlp;\
+        while (tmpl && (cmp(tmpl->elem, te) < 0)) {\
+            tmplp = tmpl;\
+            tmpl  = tmpl->next;\
+        }\
+        if (!tmplp) {\
+            tmplp = tmpl->next;\
+            *tlp = node;\
         }\
         else {\
-            prev->next = tmp;\
-            tmp->next = head;\
+            tmplp->next = node;\
         }\
-        return tmp;\
+        node->next  = tmpl;\
+        return (0);\
     }\
     \
     \
     size_t size_of_##name##_list(t_##name##_list_t tl)\
     {\
         size_t r_val;\
-        for (r_val=0; tl.head; ++r_val,\
-            tl.head = tl.head->next);\
+        for (r_val = 0; tl; ++r_val, tl = tl->next);\
         return r_val;\
     }\
     \
     \
     int delete_from_##name##_list(t_##name##_list_t* tlp, const type* te)\
     {\
-        type* head = NULL;\
-        type* prev = NULL;\
-        if ((!te)||(!tlp))\
-            return -1;\
-        head = tlp->head;\
-        while (head) {\
-            if (!cmp(head,te)) {\
+        t_##name##_list_t tmpl;\
+        t_##name##_list_t tmplp;\
+        \
+        if ((!te) || (!tlp)) {\
+            return (-1);\
+        }\
+        tmplp = NULL;\
+        tmpl = *tlp;\
+        while (tmpl) {\
+            if (!cmp(tmpl->elem, te)) {\
                 /* first element */\
-                if (!prev) {\
-                    prev = head->next;\
-                    fr(head); \
-                    tlp->head = prev;\
+                if (!tmplp) {\
+                    *tlp = tmpl->next;\
                 }\
                 else {\
-                    prev->next = head->next;\
-                    fr(head); \
+                    tmplp->next = tmpl->next;\
                 }\
-                return 0;\
+                elemfr(tmpl->elem);\
+                memfr(tmpl);\
+                return (0);\
             }\
-            prev = head;\
-            head = head->next;\
+            tmplp = tmpl;\
+            tmpl = tmpl->next;\
         }\
-        return -1; /* also fail */\
+        return (-1); /* also fail */\
     }\
     \
     \
     const type* get_element_from_##name##_list(t_##name##_list_t tl, size_t order)\
     {\
-        while (tl.head && order) {\
-            --order;\
-            tl.head = tl.head->next;\
+        if (!tl) {\
+            return (NULL);\
         }\
-        return tl.head;\
+        while (tl && order) {\
+            --order;\
+            tl = tl->next;\
+        }\
+        return (tl->elem);\
     }\
     \
     \
     void free_##name##_list(t_##name##_list_t* tlp)\
     {\
-        type* temp;\
-        if (!tlp) {\
-            return;\
-        }\
-        while (tlp->head) {\
-            temp = tlp->head;\
-            tlp->head = tlp->head->next;\
-            fr(temp); \
+        t_##name##_list_t tmpl;\
+        while (*tlp) {\
+            tmpl = (*tlp)->next;\
+            elemfr((*tlp)->elem);\
+            memfr((*tlp));\
+            (*tlp) = tmpl;\
         }\
     }\
     \
     \
     const type* get_same_element_from_##name##_list(t_##name##_list_t tl, const type* te)\
     {\
-        while(tl.head) {\
-            if (!cmp(tl.head,te)) {\
-                return tl.head;\
+        while(tl) {\
+            if (!cmp(tl->elem, te)) {\
+                return (tl->elem);\
             }\
-            tl.head = tl.head->next;\
+            tl = tl->next;\
         }\
-        return NULL;\
+        return (NULL);\
     }\
     \
     \
     int get_index_of_element_from_##name##_list(t_##name##_list_t tl, const type* te)\
     {\
         int i = 0;\
-        while(tl.head) {\
-            if (!cmp(tl.head,te)) {\
-                return i;\
+        while (tl) {\
+            if (!cmp(tl->elem, te)) {\
+                return (i);\
             }\
-            tl.head = tl.head->next;\
+            tl = tl->next;\
             ++i;\
         }\
-        return -1;\
+        return (-1);\
     }\
     \
     \
     void print_##name##_list(t_##name##_list_t tl)\
     {\
-        while(tl.head) {\
-            prnt(tl.head);\
-            tl.head = tl.head->next;\
+        while(tl) {\
+            prnt(tl->elem);\
+            tl = tl->next;\
         }\
     }\
     \
@@ -472,18 +512,25 @@
     {\
         t_##name##_list_t r_val;\
         init_##name##_list(&r_val);\
-        while(tl1.head) {\
-            add_to_##name##_list(&r_val,tl1.head);\
-            tl1.head = tl1.head->next;\
+        while (tl1) {\
+            if (add_to_##name##_list(&r_val, tl1->elem)) {\
+                goto err;\
+            }\
+            tl1 = tl1->next;\
         }\
-        while(tl2.head) {\
-            add_to_##name##_list(&r_val,tl2.head);\
-            tl2.head = tl2.head->next;\
+        while (tl2) {\
+            if (add_to_##name##_list(&r_val, tl2->elem)) {\
+                goto err;\
+            }\
+            tl2 = tl2->next;\
         }\
-        return r_val;\
+        return (r_val);\
+    err:\
+        free(r_val);\
+        init_##name##_list(&r_val);\
+        return (r_val);\
     }\
     \
     \
-
 
 #endif /* _T_LIST_H_ */
