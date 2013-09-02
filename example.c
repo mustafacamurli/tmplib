@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #include "tlist.h"
+#include "tstack.h"
 
 
 #define LOAD	(20)
@@ -48,6 +49,10 @@ void print_my_type(const my_type_t* t)
 
 tlist_header(my_type_t, my)
 tlist_source(my_type_t, my, cmp_my_type, cpy_my_type, free_my_type, print_my_type, malloc, free)
+
+
+tstack_header(my_type_t, my)
+tstack_source(my_type_t, my, cmp_my_type, cpy_my_type, free_my_type, print_my_type, malloc, free)
 
 my_type_t* generate_my_type()
 {

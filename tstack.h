@@ -17,7 +17,7 @@
  *
  *  Mustafa CAMURLI - mustafacamurli@gmail.com
  *  Mon July 08, 2013
-/
+*/
 
 /**
  * Author: Mustafa CAMURLI
@@ -30,15 +30,16 @@
 #define _T_STACK_H_
 
 
-#define tstack_header(type,name,cpy,fr)\
+#define tstack_header(type, name)\
     \
     /**
      * @description:
      *  template stack custom type
     */\
-    typedef struct t_##name##_stack_s t_##name##_stack_t;\
+    typedef struct t_##name##_stack_s* t_##name##_stack_t;\
     struct t_##name##_stack_s {\
-        type* top;\
+        type* elem;\
+        struct t_##name##_stack_s* down;\
     };\
     \
     \
@@ -48,7 +49,7 @@
     void free_##name##_stack(t_##name##_stack_t* tsp);\
     \
     \
-    const type* peek_element_from_##name##_stack(const t_##name##_stack_t* tsp);\
+    const type* peek_element_from_##name##_stack(const t_##name##_stack_t tsp);\
     \
     \
     void pop_element_from_##name##_stack(t_##name##_stack_t* tsp);\
@@ -58,19 +59,67 @@
     \
     \
 
-#define tstack_source(type,name,cpy,fr)\
+#define tstack_source(type, name, cmp, cpy, elemfr, prnt, memalc, memfr)\
     \
     void init_##name##_stack(t_##name##_stack_t* tsp)\
     {\
-        if (tsp)\
-            tsp->top = NULL;\
+        *tsp = NULL;\
     }\
     \
     \
     void free_##name##_stack(t_##name##_stack_t* tsp)\
     {\
-        /*remove 1 by 1 */;\
+        t_##name##_stack_t tmps;\
+        while (*tsp) {\
+            tmps = (*tsp)->down;\
+            elemfr((*tsp)->elem);\
+            memfr(*tsp);\
+            (*tsp) = tmps;\
+        }\
     }\
+    \
+    \
+    const type* peek_element_from_##name##_stack(const t_##name##_stack_t tsp)\
+    {\
+        if (tsp)\
+            return (tsp->elem);\
+        return (NULL);\
+    }\
+    \
+    \
+    void pop_element_from_##name##_stack(t_##name##_stack_t* tsp)\
+    {\
+        t_##name##_stack_t tmps;\
+        if (tsp && *tsp) {\
+            tmps = (*tsp)->down;\
+            elemfr((*tsp)->elem);\
+            memfr(*tsp);\
+            (*tsp) = tmps;\
+        }\
+    }\
+    \
+    \
+    const type* push_element_into_##name##_stack(t_##name##_stack_t* tsp, const type* tp)\
+    {\
+        t_##name##_stack_t node;\
+        if (!tsp || !tp) {\
+            return (NULL);\
+        }\
+        node = (t_##name##_stack_t)memalc(sizeof(struct t_##name##_stack_s));\
+        if (node) {\
+            return (NULL);\
+        }\
+        node->elem = cpy(tp);\
+        if (!(node->elem)){\
+            memfr(node);\
+            return (NULL);\
+        }\
+        node->down = *tsp;\
+        *tsp = node;\
+        return ((*tsp)->elem);\
+    }\
+    \
+    \
 
 #endif  /* _T_STACK_H_ */
 
