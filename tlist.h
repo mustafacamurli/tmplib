@@ -177,7 +177,7 @@
      *  initialize template list
      *
      * @parameters:
-     *  tlp [in] -> template list pointer
+     *  tlp [out] -> template list pointer
      *
      * @return
      *  nothing
